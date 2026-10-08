@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マヤ神話・伝承神獣図鑑 - 中央アメリカ古地図</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Cinzel & Noto Serif JP for ancient parchment theme -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+JP:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: {
+              50: '#FDFBF7',
+              100: '#F9F5EC',
+              200: '#F4EAD3',
+              300: '#E8D7B0',
+              400: '#D2B980',
+              500: '#C29B38',
+              600: '#A37A2C',
+              700: '#7E5B22',
+              800: '#523A17',
+              900: '#2C221E',
+            },
+            mayaGold: '#E6C875',
+            mayaAmber: '#C29B38',
+            mayaDark: '#2C221E',
+            mayaRed: '#8B261D',
+            mayaJade: '#2A6F62'
+          },
+          fontFamily: {
+            serif: ['"Noto Serif JP"', 'serif'],
+            cinzel: ['"Cinzel"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar for parchment aesthetics */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F4EAD3;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #C29B38;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #A37A2C;
+    }
+
+    /* Antique Map Container Styling */
+    .map-container {
+      background-color: #F4EAD3;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(253, 251, 247, 0.4) 0%, rgba(210, 185, 128, 0.5) 100%),
+        repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(139, 90, 43, 0.05) 40px, rgba(139, 90, 43, 0.05) 41px),
+        repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(139, 90, 43, 0.05) 40px, rgba(139, 90, 43, 0.05) 41px);
+      box-shadow: inset 0 0 50px rgba(44, 34, 30, 0.3);
+    }
+
+    /* Mayan Ornament Border */
+    .mayan-border {
+      border: 3px double #C29B38;
+      outline: 1px solid #7E5B22;
+      outline-offset: 3px;
+    }
+
+    /* Parchment Card Textures */
+    .parchment-card {
+      background: #FDFBF7;
+      border: 1px solid #D2B980;
+      box-shadow: 2px 3px 8px rgba(44, 34, 30, 0.08);
+      position: relative;
+    }
+    .parchment-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 15px rgba(194, 155, 56, 0.15);
+      border-radius: inherit;
+    }
+
+    /* Glowing Hotspots */
+    @keyframes pulse-glow {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 8px #C29B38); }
+    }
+    .pulse-marker {
+      animation: pulse-glow 2.5s infinite ease-in-out;
+    }
+
+    /* Prevent selection during canvas dragging */
+    .no-select {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+  </style>
+</head>
+<body class="bg-parchment-100 text-mayaDark font-serif min-h-screen flex flex-col antialiased selection:bg-mayaGold selection:text-mayaDark">
+
+  <!-- HEADER -->
+  <header class="bg-parchment-900 text-parchment-100 border-b-4 border-mayaAmber shadow-lg z-30 sticky top-0">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-full border-2 border-mayaGold bg-parchment-800 flex items-center justify-center text-mayaGold font-cinzel text-xl font-bold">
+          𓋛
+        </div>
+        <div>
+          <h1 class="font-cinzel text-xl md:text-2xl font-bold tracking-wider text-mayaGold">CODEX MAYA</h1>
+          <p class="text-xs text-parchment-300">中央アメリカ神話・伝承神獣と神々の古文書</p>
+        </div>
+      </div>
+
+      <!-- Quick Search Bar & Actions -->
+      <div class="flex items-center space-x-2 flex-grow max-w-md">
+        <div class="relative w-full">
+          <input type="text" id="global-search" placeholder="神・怪物を全域検索 (例: アルックス, ククルカン)..." 
+            class="w-full pl-9 pr-4 py-1.5 rounded-full bg-parchment-800 text-parchment-100 border border-parchment-600 focus:outline-none focus:border-mayaGold text-sm placeholder-parchment-400">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-parchment-400 text-sm"></i>
+        </div>
+        <button id="btn-references" class="px-3 py-1.5 rounded-full bg-parchment-700 hover:bg-parchment-600 text-mayaGold text-xs font-semibold whitespace-nowrap border border-mayaAmber transition">
+          <i class="fa-solid fa-book-bookmark mr-1"></i> 参考文献
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="flex-grow flex flex-col relative overflow-hidden">
+
+    <!-- TOP TOOLBAR / REGION SELECTION -->
+    <div class="bg-parchment-200 border-b border-parchment-400 px-4 py-2 z-20 flex items-center justify-between overflow-x-auto gap-2 text-sm no-select">
+      <div class="flex items-center space-x-1 shrink-0">
+        <span class="text-xs font-bold uppercase text-parchment-800 mr-2 flex items-center">
+          <i class="fa-solid fa-compass mr-1 text-mayaAmber"></i> 地域選択:
+        </span>
+        <button onclick="selectRegion(1)" class="region-btn border border-parchment-500 px-3 py-1 rounded-full text-xs font-semibold bg-parchment-100 hover:bg-mayaGold transition" data-region="1">
+          1. メキシコ南部
+        </button>
+        <button onclick="selectRegion(2)" class="region-btn border border-parchment-500 px-3 py-1 rounded-full text-xs font-semibold bg-parchment-100 hover:bg-mayaGold transition" data-region="2">
+          2. グアテマラ
+        </button>
+        <button onclick="selectRegion(3)" class="region-btn border border-parchment-500 px-3 py-1 rounded-full text-xs font-semibold bg-parchment-100 hover:bg-mayaGold transition" data-region="3">
+          3. ベリーズ
+        </button>
+        <button onclick="selectRegion(4)" class="region-btn border border-parchment-500 px-3 py-1 rounded-full text-xs font-semibold bg-parchment-100 hover:bg-mayaGold transition" data-region="4">
+          4. ホンジュラス
+        </button>
+        <button onclick="selectRegion(5)" class="region-btn border border-parchment-500 px-3 py-1 rounded-full text-xs font-semibold bg-parchment-100 hover:bg-mayaGold transition" data-region="5">
+          5. エルサルバドル
+        </button>
+      </div>
+
+      <!-- MAP CONTROLS -->
+      <div class="flex items-center space-x-2 shrink-0">
+        <button id="btn-zoom-in" title="拡大" class="w-8 h-8 rounded-full bg-parchment-100 border border-parchment-600 hover:bg-parchment-300 flex items-center justify-center text-parchment-900 shadow">
+          <i class="fa-solid fa-plus text-xs"></i>
+        </button>
+        <button id="btn-zoom-out" title="縮小" class="w-8 h-8 rounded-full bg-parchment-100 border border-parchment-600 hover:bg-parchment-300 flex items-center justify-center text-parchment-900 shadow">
+          <i class="fa-solid fa-minus text-xs"></i>
+        </button>
+        <button id="btn-zoom-reset" title="全体を表示" class="px-2.5 py-1 rounded-full bg-parchment-100 border border-parchment-600 hover:bg-parchment-300 text-xs font-bold text-parchment-900 shadow">
+          リセット
+        </button>
+      </div>
+    </div>
+
+    <!-- MAP INTERACTIVE VIEWPORT -->
+    <div id="map-viewport" class="relative flex-grow w-full h-[65vh] md:h-[70vh] cursor-grab active:cursor-grabbing overflow-hidden map-container">
+      <canvas id="antique-map-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+
+      <!-- MAP Overlay Instructions -->
+      <div class="absolute bottom-4 left-4 bg-parchment-900/80 backdrop-blur text-parchment-100 p-2.5 rounded-lg border border-mayaGold text-xs pointer-events-none shadow-md hidden sm:block">
+        <p class="flex items-center gap-1.5"><i class="fa-solid fa-hand-pointer text-mayaGold"></i> ドラッグで移動 | ホイールで拡大縮小</p>
+        <p class="flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-mayaRed"></i> 地図上のアイコンをタップして各地方の伝承を開く</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- REGION / SEARCH DETAIL DRAWER (SLIDE-OVER MODAL) -->
+  <div id="detail-drawer" class="fixed inset-0 z-50 transform translate-y-full transition-transform duration-300 ease-out flex flex-col bg-parchment-100">
+    <!-- Drawer Header -->
+    <div class="bg-parchment-900 text-parchment-100 border-b-2 border-mayaGold px-4 py-3 flex justify-between items-center shadow-md">
+      <div class="flex items-center space-x-3">
+        <span id="drawer-region-badge" class="px-2.5 py-0.5 rounded text-xs font-bold bg-mayaAmber text-parchment-900 font-cinzel">REGION</span>
+        <h2 id="drawer-title" class="text-lg md:text-xl font-bold font-cinzel text-mayaGold">地域詳細</h2>
+      </div>
+      <button id="btn-close-drawer" class="w-8 h-8 rounded-full bg-parchment-800 hover:bg-parchment-700 text-parchment-200 flex items-center justify-center transition">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Filter Bar inside Drawer -->
+    <div class="bg-parchment-200 border-b border-parchment-300 px-4 py-2.5 flex flex-wrap justify-between items-center gap-3">
+      <!-- Tabs for Monsters vs Gods -->
+      <div class="flex space-x-2">
+        <button id="tab-all" onclick="filterCategory('all')" class="category-tab px-3 py-1 rounded-md text-xs font-bold border border-mayaAmber bg-mayaAmber text-parchment-900 shadow-sm">
+          すべて (<span id="count-all">20</span>)
+        </button>
+        <button id="tab-monsters" onclick="filterCategory('monster')" class="category-tab px-3 py-1 rounded-md text-xs font-bold border border-parchment-400 bg-parchment-100 text-parchment-800 hover:bg-parchment-300">
+          <i class="fa-solid fa-dragon text-mayaRed mr-1"></i> 怪物・悪霊 (<span id="count-monsters">10</span>)
+        </button>
+        <button id="tab-gods" onclick="filterCategory('god')" class="category-tab px-3 py-1 rounded-md text-xs font-bold border border-parchment-400 bg-parchment-100 text-parchment-800 hover:bg-parchment-300">
+          <i class="fa-solid fa-sun text-mayaAmber mr-1"></i> 神々 (<span id="count-gods">10</span>)
+        </button>
+      </div>
+
+      <!-- In-Drawer Local Search Input -->
+      <div class="relative w-full sm:w-64">
+        <input type="text" id="drawer-search" placeholder="この地域内で絞り込み..." 
+          class="w-full pl-8 pr-3 py-1 rounded-md bg-parchment-100 border border-parchment-400 text-xs text-parchment-900 focus:outline-none focus:border-mayaAmber">
+        <i class="fa-solid fa-filter absolute left-2.5 top-2 text-parchment-500 text-xs"></i>
+      </div>
+    </div>
+
+    <!-- Drawer Content Scroll Area -->
+    <div class="flex-grow overflow-y-auto p-4 md:p-6 bg-parchment-100">
+      <div id="cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-7xl mx-auto">
+        <!-- Dynamic Cards Inserted Here -->
+      </div>
+      <div id="empty-state" class="hidden text-center py-12 text-parchment-600">
+        <i class="fa-solid fa-scroll text-4xl mb-3 text-parchment-400"></i>
+        <p class="font-bold">該当する伝承が見つかりませんでした。</p>
+        <p class="text-xs">検索ワードやフィルターを変更してください。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- REFERENCES MODAL -->
+  <div id="references-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-parchment-100 border-2 border-mayaAmber rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="bg-parchment-900 text-parchment-100 p-4 border-b border-mayaAmber flex justify-between items-center">
+        <h3 class="font-cinzel text-lg font-bold text-mayaGold"><i class="fa-solid fa-book-open mr-2"></i> 参考文献・出典 (References)</h3>
+        <button id="btn-close-refs" class="text-parchment-300 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <div class="p-5 overflow-y-auto space-y-6 text-sm text-parchment-900">
+        <div>
+          <h4 class="font-bold text-mayaAmber border-b border-parchment-400 pb-1 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-book"></i> 書籍 (Books)
+          </h4>
+          <ul class="space-y-3 pl-2">
+            <li class="bg-parchment-200/60 p-2.5 rounded border border-parchment-300">
+              <p class="font-semibold">Allen J. Christenson</p>
+              <p class="italic text-xs text-parchment-800">『Popol Vuh: The Sacred Book of the Maya』</p>
+              <p class="text-xs text-parchment-600 mt-1">2007年3月1日出版 / 2026年9月27日参照</p>
+            </li>
+            <li class="bg-parchment-200/60 p-2.5 rounded border border-parchment-300">
+              <p class="font-semibold">Mary Miller, Karl Taube</p>
+              <p class="italic text-xs text-parchment-800">『An Illustrated Dictionary of the Gods and Symbols of Ancient Mexico and the Maya』</p>
+              <p class="text-xs text-parchment-600 mt-1">1997年1月1日出版 / 2026年9月27日参照</p>
+            </li>
+            <li class="bg-parchment-200/60 p-2.5 rounded border border-parchment-300">
+              <p class="font-semibold">Lynn V. Foster</p>
+              <p class="italic text-xs text-parchment-800">『Handbook to Life in the Ancient Maya World』</p>
+              <p class="text-xs text-parchment-600 mt-1">2005年4月12日出版 / 2026年9月27日参照</p>
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 class="font-bold text-mayaAmber border-b border-parchment-400 pb-1 mb-2 flex items-center gap-2">
+            <i class="fa-solid fa-globe"></i> ウェブサイト (Websites)
+          </h4>
+          <ul class="space-y-3 pl-2">
+            <li class="bg-parchment-200/60 p-2.5 rounded border border-parchment-300">
+              <p class="font-semibold">Britannica Editors</p>
+              <p class="italic text-xs text-parchment-800">「Maya religion」, Encyclopædia Britannica (2024年2月15日公開)</p>
+              <a href="https://www.britannica.com/topic/Maya-religion" target="_blank" rel="noopener noreferrer" class="text-xs text-mayaAmber hover:underline break-all block mt-1">
+                https://www.britannica.com/topic/Maya-religion
+              </a>
+              <p class="text-xs text-parchment-600">2026年9月27日参照</p>
+            </li>
+            <li class="bg-parchment-200/60 p-2.5 rounded border border-parchment-300">
+              <p class="font-semibold">World History Encyclopedia</p>
+              <p class="italic text-xs text-parchment-800">「Mayan Mythology」, World History Encyclopedia (2021年8月9日公開)</p>
+              <a href="https://www.worldhistory.org/Mayan_Mythology/" target="_blank" rel="noopener noreferrer" class="text-xs text-mayaAmber hover:underline break-all block mt-1">
+                https://www.worldhistory.org/Mayan_Mythology/
+              </a>
+              <p class="text-xs text-parchment-600">2026年9月27日参照</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       COMPLETE MAYA MYTHOLOGY DATASET (5 Regions x 20 Entries = 100 Entries)
+       ========================================================================= */
+    const MYTHOLOGY_DATA = {
+      1: {
+        id: 1,
+        name: "メキシコ南部",
+        subtext: "ユカタン半島・チアパス州・タブスコ州など",
+        x: 320, // Map relative X coordinate
+        y: 200, // Map relative Y coordinate
+        monsters: [
+          { name: "アルックス", en: "Alux", location: "メキシコ南部（ユカタン半島）", content: "膝ほどの背丈で、農地や森を守護する一方で、侵入者に石を投げるなどの悪戯をする精霊・小人。", origin: "呪術師（シャーマン）が聖なる洞窟の粘土と祈祷師の血を捏ね合わせ、7年間の契約儀式を通じて生み出した。" },
+          { name: "ツカン", en: "Tsukán", location: "メキシコ南部（ユカタン半島のセノーテ）", content: "馬の頭部と立派な鬣（たてがみ）を持つ巨大な水蛇で、セノーテ（天然井戸）の守護獣。", origin: "世界の地下水脈を守り、水を枯渇から防ぐために大地と水の神々によって創造された。" },
+          { name: "シップ", en: "Sip", location: "メキシコ南部（ユカタンの森林）", content: "翡翠色の目を持ち、角の上に蜂の巣を乗せた小さな鹿の姿をした守護獣。", origin: "乱獲を行うハンターから鹿や動物たちを保護するため、森の神々によって派遣された。" },
+          { name: "ウェイ・チボ", en: "Huay Chivo", location: "メキシコ南部（ユカタン州）", content: "半人半ヤギの姿をした漆黒の獣。夜道を行く人間を恐怖で正気を失わせる。", origin: "邪悪な魔術師が闇の秘術を使い、悪魔に魂を売って自らの体を獣に変貌させた。" },
+          { name: "ドゥルム", en: "Dzulúm", location: "メキシコ南部（チアパス州）", content: "灰色と白の毛並みを持つ巨大な絶滅級の肉食獣（ジャガーの怪物）。特に女性を誘惑して喰らう。", origin: "自殺や死への過度な望みが形を成し、死の誘惑の具現化として森林の闇から誕生した。" },
+          { name: "カマソッツ", en: "Camazotz", location: "メキシコ南部（チアパス州・シバルバー）", content: "鋭いナイフのような鼻を持ち、地下世界のコウモリの館で犠牲者の首を刈り取る殺人コウモリ。", origin: "地下世界シバルバー（Xibalba）の死と闇の気配から自然発生した。" },
+          { name: "ウクム・ソーツ", en: "ÚukumSoots'", location: "メキシコ南部", content: "日光に耐性があり、切断されても再生する不滅の吸血怪物。", origin: "古代の火と血の凄惨な儀式を経て、不老不死の力を得た暗黒の精霊。" },
+          { name: "トゥンドゥン・トゥカン", en: "Dtundtuncan", location: "メキシコ南部", content: "黒い羽を纏い、片足と空洞の目を持つ不気味な巨大鳥。家々に侵入し子供の口に死の息を吹き込む。", origin: "疫病と不幸の概念が、鳥の姿をとって実体化した。" },
+          { name: "シパクトリ", en: "Cipactli", location: "メキシコ南部（メソアメリカ境界域）", content: "全身の関節に口を持つ、貪欲で巨大なワニとカエルの合成巨大水獣。", origin: "宇宙の開闢以前、原初の渾沌の海に浮かんでいた唯一の怪物。" },
+          { name: "シウコアトル", en: "Xiuhcoatl", location: "メキシコ南部", content: "口から激しい炎を噴き出す、火と稲妻を象徴する灼熱の蛇。", origin: "神々が世界を形作り日輪を運行させるための武器・属性として誕生した。" }
+        ],
+        gods: [
+          { name: "イツァムナー", en: "Itzamna", location: "メキシコ南部（ユカタン州・チチェン・イッツァ等）", content: "天空、昼と夜、知恵、書物、医学を司るマヤ神話の最高神。", origin: "宇宙全体の思考と秩序が定着し、万物の統治者として最初に生み出された。" },
+          { name: "ククルカン", en: "Kukulkan", location: "メキシコ南部（ユカタン州・チチェン・イッツァ）", content: "風、水、学習、文化を司る羽毛ある蛇神。", origin: "天と地の結合、そして宇宙の調和と生命の息吹から誕生した。" },
+          { name: "チャック", en: "Chaac", location: "メキシコ南部（ウシュマル等）", content: "稲妻の斧をふるって雲を切り開き、雨をもたらす雨と農業の神。", origin: "四方の角（東西南北）の属性と結びつき、大気の変動から自然発生した。" },
+          { name: "イシュチェル", en: "Ixchel", location: "メキシコ南部（コスメル島）", content: "月、医療、妊娠、織物、そして時に洪水をもたらす多面的な女神。", origin: "太陽神イツァムナーの伴侶として、天界の輝きの中から現れた。" },
+          { name: "ヤム・カックス", en: "Yum Kaax", location: "メキシコ南部", content: "トウモロコシや野生の植物、森林の動物たちを守護する若き農耕神。", origin: "人間の命の糧であるトウモロコシの発芽とともに大地から生み出された。" },
+          { name: "イシュタプ", en: "Ixtab", location: "メキシコ南部", content: "首を吊った女性の姿で描かれ、絞首自殺者の魂を楽園へ導く守護女神。", origin: "苦痛からの解放と魂の救済という概念が神格化した。" },
+          { name: "エク・チュア", en: "Ek Chuah", location: "メキシコ南部", content: "黒い肌を持ち、カカオの栽培と長距離交易商人たちの安全を守る商人の神。", origin: "カカオ豆を通貨とする交易所と平和な商業交易の広まりとともに誕生した。" },
+          { name: "キニチ・アハウ", en: "Kinich Ahau", location: "メキシコ南部", content: "昼の空を渡るギラギラとした情熱的な太陽神。", origin: "最高神イツァムナーの太陽としての側面・化身として生み出された。" },
+          { name: "ア・プチ", en: "Ah Puch / Cazin", location: "メキシコ南部", content: "腐敗した死体の姿をし、地下最下層（ミトナル）を支配する不吉な死の神。", origin: "万物の死と腐敗、滅亡の恐怖が実体化して誕生した。" },
+          { name: "ボロン・ツァカブ", en: "Bolon Tzacab / K'awiil", location: "メキシコ南部", content: "蛇に変わった足と大きな鼻を持ち、王権の象徴と稲妻を司る神。", origin: "神聖なる王の血統と天の稲妻が交わったことで誕生した。" }
+        ]
+      },
+      2: {
+        id: 2,
+        name: "グアテマラ",
+        subtext: "高地およびペテン低地",
+        x: 480,
+        y: 400,
+        monsters: [
+          { name: "ヴクブ・カキシュ", en: "Vucub Caquix", location: "グアテマラ（ペテン地方・キチェ伝承）", content: "翡翠の歯と銀の目を取り付け、太陽と月を自称した高慢な怪鳥。", origin: "本物の太陽が昇る以前の混沌の時代に、虚栄心と慢心から自らを神と称して怪物化した。" },
+          { name: "ジパクナー", en: "Zipacna", location: "グアテマラ（ポポル・ヴフ伝承）", content: "山々を一夜で積み上げる巨大なワニの巨人。400人の若者を打ち殺した。", origin: "ヴクブ・カキシュの長男として、太古の大地の圧倒的な地殻エネルギーから生まれた。" },
+          { name: "カブラカン", en: "Cabrakan", location: "グアテマラ（ポポル・ヴフ伝承）", content: "足を踏み鳴らすだけで山々を破砕し、激しい地震を引き起こす巨人。", origin: "ヴクブ・カキシュの次男として、地下の破壊的な振動の力から生まれた。" },
+          { name: "シェコトコヴァチ", en: "Xecotcovach", location: "グアテマラ", content: "神に従わなかった欠陥品である「木製人間」の目を抉り出した怪鳥。", origin: "神々が失敗した試作人類を処刑・壊滅させるための粛清兵器として創造した。" },
+          { name: "カムラッツ", en: "Camulatz", location: "グアテマラ", content: "木製人間の首を跳ね飛んで食い散らかした凶暴な怪鳥。", origin: "神々の怒りを受け、失敗作の人類を破壊するために遣わされた。" },
+          { name: "コティバム", en: "Cotzbalam", location: "メキシコ・グアテマラ国境", content: "人間の肉と筋肉を喰らい尽くす、大食のジャガー怪物。", origin: "世界のやり直しに伴う大洪水の際、天からの制裁の使者として誕生した。" },
+          { name: "タタ・ドゥエンデ", en: "Tata Duende", location: "グアテマラ・ベリーズ国境", content: "親指がなく足首が逆向きについた小柄な森の怪物。森に入った人間の手指を奪う。", origin: "自然の生態系を守り、森林荒らしを防ぐための大地の怒りから生じた。" },
+          { name: "フナフプー・ウチ", en: "Hunahpu-Uti", location: "グアテマラ（地下世界シバルバー）", content: "シバルバーの「剃刀の館」に潜み、鋭い刃物で侵入者の身を切り刻む怪異。", origin: "死者が受ける練獄の試練の一部として地下世界に配置された。" },
+          { name: "イシュキックの呪われし影", en: "Xquic's Shadow", location: "グアテマラ", content: "血の壺から生まれ、地下世界の処刑人から逃れるために彷徨う血の幻影。", origin: "死の君主たちの理不尽な処刑命令に対する怨念から生じた。" },
+          { name: "シバルバーの処刑犬", en: "Xibalba Hound", location: "グアテマラ（高地伝承）", content: "赤い目を光らせ、死者の魂をシバルバーの王たちのもとへ追い立てる骨の犬。", origin: "地下世界の支配者フン・カメーたちの忠実な番犬として死者の怨念から形作られた。" }
+        ],
+        gods: [
+          { name: "フラカン", en: "Huracan", location: "グアテマラ（キチェ・マヤ伝承）", content: "一本足で風、暴風雨（ハリケーンの語源）、火を司る創世神。「空の心」。", origin: "原初の無の時代、天界の圧倒的エネルギーとして最初に存在した。" },
+          { name: "グクマッツ", en: "Gucumatz", location: "グアテマラ（ポポル・ヴフ伝承）", content: "水と空を巡り、世界と人間を創造した「羽毛ある蛇」（ククルカンと同等）。", origin: "フラカンとともに原初の水の中に存在し、世界の創造を決意して活動を開始した。" },
+          { name: "フナフプー", en: "Hunahpu", location: "グアテマラ（ポポル・ヴフ伝承）", content: "双子の異能者。シバルバーの魔物を知恵と術で打ち倒し、太陽となった英雄神。", origin: "フン・フナフプーの生首（瓢箪の木）の唾液を口に受けた処女イシュキックから誕生した。" },
+          { name: "イシュバランケー", en: "Xbalanque", location: "グアテマラ（ポポル・ヴフ伝承）", content: "フナフプーの双子の弟。ジャガーの皮を纏い、月となった英雄神。", origin: "兄フナフプーとともに、母イシュキックの胎内から同時に誕生した。" },
+          { name: "トヒール", en: "Tohil", location: "グアテマラ（キチェ族の守護神）", content: "人間に火を与えた太陽と生贄、戦争の強力な神。", origin: "暗闇をさまよう人類に熱と光を与えるため、神々の意向で生み出された。" },
+          { name: "フン・カメー", en: "Hun Came", location: "グアテマラ（シバルバー）", content: "地下世界シバルバーの最上の支配者であり、一番目の死の神。", origin: "死と病気を統率するため、冥界の成立時に権能を得た。" },
+          { name: "ヴクブ・カメー", en: "Vucub Came", location: "グアテマラ（シバルバー）", content: "フン・カメーとともに地下世界を共同統治する二番目の死の神。", origin: "冥界の秩序と試練を冷徹に司る存在として誕生した。" },
+          { name: "イシュキック", en: "Xquic", location: "グアテマラ", content: "地下世界の姫であり、英雄双子を生み落とした生命と再生の女神。", origin: "地下の死神クチュマキックの娘として誕生した。" },
+          { name: "フン・バッツ", en: "Hun Batz", location: "グアテマラ", content: "芸術家、奏者、書記を司るホエザル姿の神。", origin: "英雄双子に対する嫉妬により、魔法の木から降りられなくなりサルへ姿を変えられた。" },
+          { name: "フン・チョエン", en: "Hun Chuen", location: "グアテマラ", content: "職人や彫刻家を守護するホエザル姿の神（フン・バッツの双子）。", origin: "英雄双子の策にはまり、芸術を象徴するサルの神へと変化した。" }
+        ]
+      },
+      3: {
+        id: 3,
+        name: "ベリーズ",
+        subtext: "カリブ沿岸とジャングル",
+        x: 580,
+        y: 320,
+        monsters: [
+          { name: "ラ・ヨローナ（マヤ伝承版）", en: "La Llorona", location: "ベリーズ全域", content: "川辺で「我が子はいずこ」と泣き叫び、近づいた者を水中へ引きずり込む白い服の女の幽霊。", origin: "自らの手で子供を水死させた罪と絶望から、成仏できずに怪物化した。" },
+          { name: "エル・シホナバ", en: "El Xtabay / Sihuanaba", location: "ベリーズの農村部", content: "セイバの木の陰に立ち、長い髪を解かしながら酔っ払いや浮気者を誘惑して崖から突き落とす怪物。", origin: "生前、嫉妬深く不貞に満ちた生活を送った女性が呪われ、妖魔と化した。" },
+          { name: "カトゥ・トゥン", en: "Catu Tun", location: "ベリーズ内陸部", content: "洞窟奥深くに生息し、足音が岩の崩落音のように響く巨大な石の巨人。", origin: "地震と岩石の崩落現象が、太古の魔術と結合して意思を持った。" },
+          { name: "ママン・ボワ", en: "Maman Bois", location: "ベリーズのジャングル", content: "下半身が鹿や樹木と化しており、森林を破壊する木こりを襲う森の怪物。", origin: "自然破壊に対する過酷な報復として、森のスピリットが具現化した。" },
+          { name: "ビジョン・サーペント", en: "Vision Serpent", location: "ベリーズ（カラコル遺跡など）", content: "両端の顎から祖先や神々の顔を覗かせる、放血儀式の煙から立ち上る異形の大蛇。", origin: "王族が自らの血液を刺し通して捧げる放血儀式の聖なる煙から召喚・発生する。" },
+          { name: "チェ・ウロ", en: "Che Uro", location: "ベリーズ沿岸部", content: "湿地帯に潜み、ヘドロと腐敗臭を撒き散らしながら旅人を捕食する泥獣。", origin: "湿地帯に溜まった古代の死者のガスと怨念から生み出された。" },
+          { name: "スリー・レッグド・バード", en: "Three-legged bird", location: "ベリーズ", content: "3本の脚を持ち、不吉な鳴き声で村に疫病を予言して回る怪鳥。", origin: "シバルバーの死神が地上へ病を撒き散らすための使いとして誕生させた。" },
+          { name: "フランク・ジャガー", en: "Frank Jaguar", location: "ベリーズのジャングル", content: "人間の言葉を話し、人を巧みな話術で騙して洞窟へ連れ込む巨大ジャガー。", origin: "智恵を得た古代の野生ジャガーが闇の精霊に取り憑かれた。" },
+          { name: "イシュ・タバネ", en: "Ix Tabane", location: "ベリーズ", content: "井戸の底に潜み、水面を覗き込んだ子供の影を奪って溺死させる水魔。", origin: "井戸事故に対する古代からの戒めが具現化した。" },
+          { name: "ナイト・ストーカー", en: "Night Stalker / Ak'ab", location: "ベリーズ", content: "月の出ない夜、村の外縁を這い回り家畜の血を抜き取る影の怪獣。", origin: "夜の暗闇の恐怖そのものが実体化した。" }
+        ],
+        gods: [
+          { name: "キニッチ・アハウ（ベリーズ伝承）", en: "Kinich Ahau", location: "ベリーズ（アルトゥン・ハ遺跡）", content: "太陽の光と熱、王権の権威を司る太陽神（アルトゥン・ハで巨大な翡翠の頭部が出土）。", origin: "天界の光の源として宇宙開闢時に顕現した。" },
+          { name: "チャック（ベリーズ伝承）", en: "Chac", location: "ベリーズ", content: "洞窟の奥深くに住み、農業に必要な雨と雷を制御する神。", origin: "大地と空の蒸気から発生した。" },
+          { name: "イクシェル", en: "Ixchel", location: "ベリーズ（サン・ペドロ周辺）", content: "命の誕生と海の航海、虹を司る慈悲深い女神。", origin: "宇宙の女性性の最高峰として存在を開始した。" },
+          { name: "ユム・カックス（ベリーズ伝承）", en: "Yum Kaax", location: "ベリーズ", content: "森林と野生動物、耕作地を守る自然の神。", origin: "植物の生長エネルギーから誕生した。" },
+          { name: "イク", en: "Ik", location: "ベリーズ", content: "生気となる風、そして強風による破滅の双方を司る風神。", origin: "大気の循環と神々の最初の吐息から誕生した。" },
+          { name: "カヴィール", en: "K'awiil", location: "ベリーズ", content: "豊穣と稲妻、王家の繁栄を司る神。", origin: "天からの稲妻が大地を撃ち抜いた瞬間に誕生した。" },
+          { name: "ラフン・チャン", en: "Lahun Chan", location: "ベリーズ", content: "金星が朝立ち上る際の凶兆と攻撃性を司る金星神。", origin: "金星の不気味な輝きと天体の軌道から生み出された。" },
+          { name: "イシュ・カンナール", en: "Ix Kanal", location: "ベリーズ", content: "トウモロコシの成熟と黄色の実りを司る女神。", origin: "豊かな実りを喜ぶ人間たちの感謝の祈りから生み出された。" },
+          { name: "ア・ムゼン・カブ", en: "Ah Muzen Cab", location: "ベリーズ", content: "ハチミツの生産とミツバチを統轄する降下神。", origin: "万物に甘みを与えるため、天界から倒立した姿で降り立った。" },
+          { name: "ホロン・ティ・ク", en: "Holon Ti Ku", location: "ベリーズ", content: "地下洞窟の最深部を護り、聖なる水源を保持する守護神。", origin: "地下の暗黒水脈の成立に伴い発生した。" }
+        ]
+      },
+      4: {
+        id: 4,
+        name: "ホンジュラス",
+        subtext: "コパン山岳地域・モスキティア",
+        x: 640,
+        y: 440,
+        monsters: [
+          { name: "エル・シスカモ", en: "El Ciscamo", location: "ホンジュラス（コパン地方）", content: "巨大な猪の胴体に鋭い牙を持ち、農作物を一夜で荒らし尽くす怪物。", origin: "害獣への恐怖と大地の荒々しいエネルギーが合体して発生した。" },
+          { name: "ケカウ", en: "Kekau", location: "ホンジュラスの湿地帯", content: "鳥の嘴と蛇の胴体を持つキメラ怪物。夜間、浅瀬で人を捕食する。", origin: "水辺の呪術と古の呪いによって生み出された。" },
+          { name: "ワラバ", en: "Waraba", location: "ホンジュラスの森林", content: "赤い目を光らせ、旅人を誘い込んで噛み殺す巨大な足の短い puma（山猫の怪物）。", origin: "ジャングルに潜む肉食獣への恐れが超自然的な力を得て怪物化した。" },
+          { name: "ウク・パット", en: "Uk Pat", location: "ホンジュラス", content: "背中に大きな瘤（こぶ）を持ち、土砂崩れや地滑りを起こす土の怪物。", origin: "山崩れの土砂から意識が芽生えて実体化した。" },
+          { name: "シバルバーの毒虫", en: "Xibalba Insect", location: "ホンジュラス", content: "人間の体内に入り込み、猛烈な病と痛みを及ぼす巨大なサソリ型の怪物。", origin: "冥界の死神たちが人間に病苦を与えるために精製した。" },
+          { name: "カ・ロコ", en: "Ka Roko", location: "ホンジュラス沿岸部", content: "巨大なヒキガエルの姿をし、吐き出す毒液で村一つを全滅させる水妖。", origin: "毒の沼地から湧き出た負のエネルギーから生み出された。" },
+          { name: "黒いジャガーの怪物", en: "Ek Balam Monster", location: "ホンジュラス（コパン遺跡周辺）", content: "日食の際に出現し、太陽を喰らい尽くそうとする闇のジャガー。", origin: "宇宙の暗闇と太陽の欠損（日食）の恐怖から生じた。" },
+          { name: "ツィツィミトル（マヤ派生型）", en: "Tzitzimitl", location: "ホンジュラス", content: "夜空から降下し、人間を貪り食う骨の姿をした星の悪魔。", origin: "太陽が滅びた時の無の世界の住人として誕生した。" },
+          { name: "グアハ", en: "Guaja", location: "ホンジュラス", content: "夜中に不吉な叫び声をあげて家々の屋根を飛び回る首の長い鳥の怪物。", origin: "死を予告する予言の気配が実体化した。" },
+          { name: "シワナバ", en: "Sihuanaba", location: "ホンジュラス", content: "遠くからは美しい女性に見えるが、近づくと馬の顔（あるいは骸骨）に変貌する怪物。", origin: "男性を惑わす不貞の罪により神々の呪いを受けて異形化した。" }
+        ],
+        gods: [
+          { name: "キニッチ・ヤシュ・クック・モ", en: "K'inich Yax K'uk' Mo'", location: "ホンジュラス（コパン遺跡）", content: "コパン王朝の創始者であり、太陽神と輝くケツァール・インコが融合した神。", origin: "偉大な王の死後、民の崇拝と王朝の権威付けのために太陽神として神格化された。" },
+          { name: "チャック（ホンジュラス伝承）", en: "Chac", location: "ホンジュラス（コパン）", content: "山々から雨雲を呼び寄せ、作物の実りを保障する恵みの雨神。", origin: "天界の水分の集合体から発生した。" },
+          { name: "イツァムナー（コパン伝承）", en: "Itzamna", location: "ホンジュラス", content: "天空を保持し、世界に文字と暦をもたらした最高知恵神。", origin: "宇宙の開闢とともに誕生した。" },
+          { name: "カヴィール（コパン伝承）", en: "K'awiil", location: "ホンジュラス（コパン）", content: "王の神笏（杖）に描かれ、稲妻と王権の繁栄を司る神。", origin: "雷鳴と神聖な火花から誕生した。" },
+          { name: "ヤマツ", en: "Yamat", location: "ホンジュラス", content: "豊かな土壌と粘土の品質を守る焼き物と大地の神。", origin: "職人たちが土を捏ねて土器を作る際の技術と祈りから誕生した。" },
+          { name: "フン・ナウ", en: "Hun Nau", location: "ホンジュラス", content: "狩猟の獲物の安全と獵師の弓矢に命中を与える狩りの神。", origin: "狩人の生存への欲望から生み出された。" },
+          { name: "イシュ・チェル（ホンジュラス伝承）", en: "Ixchel", location: "ホンジュラス", content: "出産、育児、そして川の氾濫を司る母性女神。", origin: "天界の慈愛の象徴として生み出された。" },
+          { name: "ボロン・ティ・ク", en: "Bolon Ti Ku", location: "ホンジュラス", content: "地下世界の9つの階層をそれぞれ司る9柱の夜の神々の総称。", origin: "世界の構造（天13層・地平・地下9層）が定められた際に生み出された。" },
+          { name: "イシュ・ムカネ", en: "Ixmucane", location: "ホンジュラス／グアテマラ", content: "トウモロコシの粉を捏ねて最初の人間の肉体を創造した「おばあさん」の神。", origin: "原初の太古より存在する知恵の祖母として顕現した。" },
+          { name: "イシュピヤコック", en: "Ixpiyacoc", location: "ホンジュラス／グアテマラ", content: "イシュムカネとともにトウモロコシから人間を創造した「おじいさん」の神（占星術師）。", origin: "原初の神々として最初から存在していた。" }
+        ]
+      },
+      5: {
+        id: 5,
+        name: "エルサルバドル",
+        subtext: "太平洋沿岸および火山帯",
+        x: 520,
+        y: 500,
+        monsters: [
+          { name: "エル・カドゥエイ・ネグロ", en: "El Cadejo Negro", location: "エルサルバドル全域", content: "鎖を巻き付け、赤い目を光らせて夜道を行く者を死へ誘う黒い巨大犬の怪物。", origin: "人間の罪悪感や悪意が実体化し、魔王の使者として誕生した。" },
+          { name: "エル・タバカイ", en: "El Tabacay", location: "エルサルバドル", content: "タバコの煙の臭いを撒き散らし、森に入った者を窒息させる影の怪物。", origin: "森林の有害な気体と闇の魔術が合体して誕生した。" },
+          { name: "シワナバ（エルサルバドル版）", en: "Sihuanaba", location: "エルサルバドルの川辺", content: "遠目には濡れた髪の美少女だが、振り返ると馬の頭部や腐敗した骸骨を見せる妖魔。", origin: "神々を裏切り不貞を働いたため、永劫に人を惑わす呪いを受けた。" },
+          { name: "シシミテ", en: "Cipitio / Cisimite", location: "エルサルバドル", content: "大きな麦わら帽子を被り、足首が後ろ向きについた永遠に年をとらない少年型の怪異。", origin: "呪われた母親（シワナバ）から生まれたことで、神々の罰を受けて不老の異形となった。" },
+          { name: "ルスカ（沿岸部伝承）", en: "Lusca", location: "エルサルバドル沿岸", content: "サメの頭部と巨大なタコの触手を持つ、海中で船を丸呑みにする巨大海獣。", origin: "大洋の底深くの闇と渦潮の恐怖から自然発生した。" },
+          { name: "エル・フリオ", en: "El Frio", location: "エルサルバドルの山岳部", content: "触れた者を瞬時に凍結させる、冷気を纏った透明な影の怪物。", origin: "厳しい山頂の極寒と遭難者の無念から発生した。" },
+          { name: "チャカリン", en: "Chacalin", location: "エルサルバドル", content: "巨大なエビの姿をし、川の底で渦を起こして子供を引っ張り込む怪物。", origin: "川の不気味な深みに対する人々の恐怖から生じた。" },
+          { name: "カク・イック", en: "K'aq Ik'", location: "エルサルバドル", content: "高熱の病原菌を風に乗せて村々に撒き散らす「赤き風」の赤色悪魔。", origin: "熱病と干ばつの恐怖が神々の怒りによって具現化した。" },
+          { name: "フン・アハウの使者", en: "Hun Ahau Messenger", location: "エルサルバドル", content: "骨むき出しの足で走り回り、死者の魂を収穫する凶兆の使者。", origin: "死神フン・アハウの命により、冥界から地上へ放たれた。" },
+          { name: "ナイト・ジャガー", en: "Night Jaguar", location: "エルサルバドル", content: "星々の斑点を持ち、夜の空を走り抜けながら人間の魂を掠め取る空中怪物。", origin: "夜空の暗黒と星の配置から生まれた。" }
+        ],
+        gods: [
+          { name: "ケツァルコアトル / ククルカン", en: "Quetzalcoatl / Kukulkan", location: "エルサルバドル（タスマル遺跡）", content: "風、恵み、学習、文明を人間に授けた羽毛ある蛇神。", origin: "天界の気流と輝く光が交わって顕現した。" },
+          { name: "チャック（エルサルバドル伝承）", en: "Chac", location: "エルサルバドル", content: "雨と恵みの水を供給し、乾いた大地に命を吹き込む神。", origin: "太平洋から湧き上がる雲と雷鳴から生み出された。" },
+          { name: "エル・カドゥエイ・ブランコ", en: "El Cadejo Blanco", location: "エルサルバドル", content: "白い毛並みを持ち、夜道を行く無垢な人々を悪魔から命がけで守る白い犬の神聖な精霊。", origin: "神々が人間に与えた慈悲と守護の念が形をとって誕生した。" },
+          { name: "イシュチェル（エルサルバドル伝承）", en: "Ixchel", location: "エルサルバドル", content: "月の満ち欠け、出産の無事、生命の再生を管轄する女神。", origin: "天の月の輝きから発生した。" },
+          { name: "イツァムナー（エルサルバドル伝承）", en: "Itzamna", location: "エルサルバドル", content: "天界を統べる長老神であり、万物の秩序を保持する神。", origin: "世界の始まりとともに存在した。" },
+          { name: "シュトテクトリ", en: "Xhtotectli", location: "エルサルバドル", content: "火山の噴火と火の情熱を司る火山の神。", origin: "火山地帯の大地の煮え滾るマグマから発生した。" },
+          { name: "トナル", en: "Tonal", location: "エルサルバドル", content: "生まれた子供に生涯の運命と守護動物（ナワール）を与える運命の神。", origin: "誕生の瞬間に輝く星々の配置から生み出された。" },
+          { name: "ヤム・カックス（エルサルバドル伝承）", en: "Yum Kaax", location: "エルサルバドル", content: "トウモロコシ畑と野山を守り、飢餓から人々を救う神。", origin: "大地から生え出でる芽吹きとともに誕生した。" },
+          { name: "イシュ・カン", en: "Ix Kan", location: "エルサルバドル", content: "大地の豊かな黄金色の実りを司る母性豊かな女神。", origin: "人々の感謝の祈りから生み出された。" },
+          { name: "オショムコ", en: "Oxomoco", location: "エルサルバドル", content: "暦と卜占（占い）を人間に教えた古代の知恵の女神。", origin: "太古の創世時代に神々によって生み出された。" }
+        ]
+      }
+    };
+
+    /* =========================================================================
+       ANTIQUE CANVAS MAP ENGINE WITH PAN, ZOOM & HOTSPOTS
+       ========================================================================= */
+    const canvas = document.getElementById('antique-map-canvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = document.getElementById('map-viewport');
+
+    // World size for map canvas
+    const MAP_WIDTH = 1000;
+    const MAP_HEIGHT = 700;
+
+    // View state
+    let scale = 1;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let activeRegionId = null;
+    let currentCategory = 'all'; // 'all', 'monster', 'god'
+
+    // Resize Canvas to Viewport
+    function resizeCanvas() {
+      canvas.width = viewport.clientWidth;
+      canvas.height = viewport.clientHeight;
+      drawMap();
+    }
+
+    // Initialize map centering
+    function resetView() {
+      const containerW = viewport.clientWidth;
+      const containerH = viewport.clientHeight;
+      scale = Math.min(containerW / MAP_WIDTH, containerH / MAP_HEIGHT) * 0.95;
+      if (scale < 0.6) scale = 0.6;
+      panX = (containerW - MAP_WIDTH * scale) / 2;
+      panY = (containerH - MAP_HEIGHT * scale) / 2;
+      drawMap();
+    }
+
+    // DRAW ANTIQUE MAP (Custom Hand-drawn Graphic Elements via HTML5 Canvas)
+    function drawMap() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(panX, panY);
+      ctx.scale(scale, scale);
+
+      // 1. Parchment Base Texture & Water Color
+      ctx.fillStyle = '#E8D7B0';
+      ctx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+      // Sea / Water Hatching Effect (Caribbean Sea & Pacific Ocean)
+      ctx.fillStyle = '#DFCCA0';
+      ctx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+      // 2. Latitude/Longitude Grid Lines (Ancient Chart Style)
+      ctx.strokeStyle = 'rgba(139, 90, 43, 0.15)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < MAP_WIDTH; x += 50) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, MAP_HEIGHT);
+        ctx.stroke();
+      }
+      for (let y = 0; y < MAP_HEIGHT; y += 50) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(MAP_WIDTH, y);
+        ctx.stroke();
+      }
+
+      // Rhumb Lines / Wind Rose Rays
+      ctx.save();
+      ctx.translate(850, 150);
+      ctx.strokeStyle = 'rgba(163, 122, 44, 0.25)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 12; i++) {
+        ctx.beginPath();
+        ctx.moveTo(-300, 0);
+        ctx.lineTo(300, 0);
+        ctx.stroke();
+        ctx.rotate(Math.PI / 6);
+      }
+      ctx.restore();
+
+      // 3. Central America Coastline / Landmass (Stylized Ancient Sepia Outline)
+      ctx.fillStyle = '#FAF4E3'; // Land color
+      ctx.strokeStyle = '#7E5B22'; // Coastline border
+      ctx.lineWidth = 2.5;
+
+      ctx.beginPath();
+      // Yucatan Peninsula & Central America Shape
+      ctx.moveTo(100, 100);
+      ctx.bezierCurveTo(200, 80, 280, 100, 320, 120); // Gulf Coast
+      ctx.bezierCurveTo(380, 130, 450, 100, 460, 200); // Yucatan Tip (Cancun / Cozumel area)
+      ctx.bezierCurveTo(450, 280, 520, 280, 560, 310); // Belize Coast
+      ctx.bezierCurveTo(620, 350, 680, 400, 750, 430); // Honduras Coast
+      ctx.bezierCurveTo(730, 480, 650, 510, 580, 500); // Honduras/El Salvador South
+      ctx.bezierCurveTo(500, 540, 450, 520, 420, 460); // Pacific El Salvador
+      ctx.bezierCurveTo(380, 440, 350, 420, 300, 380); // Guatemala / Chiapas Pacific
+      ctx.bezierCurveTo(200, 350, 150, 250, 100, 200); // Tabasco / Southern Mexico
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Internal Region Boundaries (Dotted Lines)
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = '#A37A2C';
+      ctx.lineWidth = 1.5;
+
+      // Region 1 (Mexico) vs Region 2 (Guatemala) / 3 (Belize)
+      ctx.beginPath();
+      ctx.moveTo(280, 220); ctx.lineTo(440, 310); ctx.lineTo(520, 300);
+      ctx.stroke();
+
+      // Region 2 (Guatemala) vs 3 (Belize)
+      ctx.beginPath();
+      ctx.moveTo(490, 310); ctx.lineTo(550, 380);
+      ctx.stroke();
+
+      // Region 2 (Guatemala) vs 4 (Honduras) / 5 (El Salvador)
+      ctx.beginPath();
+      ctx.moveTo(520, 420); ctx.lineTo(570, 480);
+      ctx.stroke();
+
+      ctx.setLineDash([]); // Reset dash
+
+      // 4. Ancient Decor Elements (Sea Monster, Compass Rose, Ships)
+      // Compass Rose
+      ctx.save();
+      ctx.translate(850, 150);
+      ctx.fillStyle = '#C29B38';
+      ctx.beginPath(); ctx.arc(0, 0, 35, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2C221E';
+      ctx.font = 'bold 14px Cinzel';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('N', 0, -22);
+      ctx.fillText('S', 0, 22);
+      ctx.fillText('E', 22, 0);
+      ctx.fillText('W', -22, 0);
+      ctx.restore();
+
+      // Antique Labels on Ocean
+      ctx.fillStyle = 'rgba(126, 91, 34, 0.4)';
+      ctx.font = 'italic 16px Noto Serif JP';
+      ctx.fillText('〜 カリブ海 (Mare Caribaeum) 〜', 650, 220);
+      ctx.fillText('〜 太平洋 (Oceanus Pacificus) 〜', 220, 520);
+
+      // Decorative Sea Monster Sketch
+      ctx.fillStyle = 'rgba(126, 91, 34, 0.3)';
+      ctx.font = '28px serif';
+      ctx.fillText('🦑', 780, 280);
+      ctx.fillText('⛵', 200, 580);
+
+      // 5. Region Markers & Hotspots
+      Object.keys(MYTHOLOGY_DATA).forEach(key => {
+        const reg = MYTHOLOGY_DATA[key];
+        const isSelected = activeRegionId == reg.id;
+
+        // Marker Halo
+        ctx.beginPath();
+        ctx.arc(reg.x, reg.y, isSelected ? 28 : 22, 0, Math.PI * 2);
+        ctx.fillStyle = isSelected ? 'rgba(194, 155, 56, 0.4)' : 'rgba(139, 90, 43, 0.2)';
+        ctx.fill();
+
+        // Pin Center
+        ctx.beginPath();
+        ctx.arc(reg.x, reg.y, isSelected ? 14 : 10, 0, Math.PI * 2);
+        ctx.fillStyle = isSelected ? '#8B261D' : '#C29B38';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#FAF4E3';
+        ctx.stroke();
+
+        // Text Banner
+        ctx.fillStyle = '#2C221E';
+        ctx.font = 'bold 13px Noto Serif JP';
+        ctx.textAlign = 'center';
+        ctx.fillText(reg.name, reg.x, reg.y - 32);
+
+        ctx.font = '10px Noto Serif JP';
+        ctx.fillStyle = '#7E5B22';
+        ctx.fillText(`(10神 / 10獣)`, reg.x, reg.y - 18);
+      });
+
+      ctx.restore();
+    }
+
+    /* =========================================================================
+       EVENT LISTENERS FOR CANVAS (PAN & ZOOM & CLICK)
+       ========================================================================= */
+    viewport.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      dragStartX = e.clientX - panX;
+      dragStartY = e.clientY - panY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      panX = e.clientX - dragStartX;
+      panY = e.clientY - dragStartY;
+      drawMap();
+    });
+
+    window.addEventListener('mouseup', () => { isDragging = false; });
+
+    // Touch Support for Mobile
+    viewport.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        dragStartX = e.touches[0].clientX - panX;
+        dragStartY = e.touches[0].clientY - panY;
+      }
+    });
+
+    viewport.addEventListener('touchmove', (e) => {
+      if (!isDragging || e.touches.length !== 1) return;
+      panX = e.touches[0].clientX - dragStartX;
+      panY = e.touches[0].clientY - dragStartY;
+      drawMap();
+    });
+
+    viewport.addEventListener('touchend', () => { isDragging = false; });
+
+    // Wheel Zoom
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      const mouseX = e.clientX - viewport.getBoundingClientRect().left;
+      const mouseY = e.clientY - viewport.getBoundingClientRect().top;
+
+      const newScale = Math.max(0.4, Math.min(3.0, scale * zoomFactor));
+      
+      panX = mouseX - (mouseX - panX) * (newScale / scale);
+      panY = mouseY - (mouseY - panY) * (newScale / scale);
+      scale = newScale;
+
+      drawMap();
+    }, { passive: false });
+
+    // Click Detection on Region Markers
+    viewport.addEventListener('click', (e) => {
+      const rect = viewport.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      // Convert Screen Coords to Map Canvas World Coords
+      const worldX = (clickX - panX) / scale;
+      const worldY = (clickY - panY) / scale;
+
+      // Check distance to region hotspots
+      Object.keys(MYTHOLOGY_DATA).forEach(key => {
+        const reg = MYTHOLOGY_DATA[key];
+        const dist = Math.hypot(reg.x - worldX, reg.y - worldY);
+        if (dist <= 35) { // Click radius
+          selectRegion(reg.id);
+        }
+      });
+    });
+
+    // Zoom Buttons
+    document.getElementById('btn-zoom-in').addEventListener('click', () => {
+      scale = Math.min(3.0, scale * 1.25);
+      drawMap();
+    });
+    document.getElementById('btn-zoom-out').addEventListener('click', () => {
+      scale = Math.max(0.4, scale / 1.25);
+      drawMap();
+    });
+    document.getElementById('btn-zoom-reset').addEventListener('click', resetView);
+
+    /* =========================================================================
+       DRAWER & REGION CONTENT MANAGEMENT
+       ========================================================================= */
+    const drawer = document.getElementById('detail-drawer');
+    const cardsGrid = document.getElementById('cards-grid');
+    const emptyState = document.getElementById('empty-state');
+    const drawerSearch = document.getElementById('drawer-search');
+    const globalSearch = document.getElementById('global-search');
+
+    function selectRegion(regionId) {
+      activeRegionId = regionId;
+      drawMap();
+
+      // Update button styling
+      document.querySelectorAll('.region-btn').forEach(btn => {
+        if (parseInt(btn.dataset.region) === regionId) {
+          btn.classList.add('bg-mayaAmber', 'text-parchment-900', 'border-mayaDark');
+          btn.classList.remove('bg-parchment-100');
+        } else {
+          btn.classList.remove('bg-mayaAmber', 'text-parchment-900', 'border-mayaDark');
+          btn.classList.add('bg-parchment-100');
+        }
+      });
+
+      const regData = MYTHOLOGY_DATA[regionId];
+      document.getElementById('drawer-title').innerText = `${regData.name} (${regData.subtext})`;
+      document.getElementById('drawer-region-badge').innerText = `REGION ${regionId}`;
+
+      // Reset local search and category filter
+      drawerSearch.value = '';
+      currentCategory = 'all';
+      updateTabStyles();
+      renderRegionCards();
+
+      // Slide drawer up
+      drawer.classList.remove('translate-y-full');
+    }
+
+    document.getElementById('btn-close-drawer').addEventListener('click', () => {
+      drawer.classList.add('translate-y-full');
+      activeRegionId = null;
+      drawMap();
+    });
+
+    function filterCategory(cat) {
+      currentCategory = cat;
+      updateTabStyles();
+      renderRegionCards();
+    }
+
+    function updateTabStyles() {
+      const tabs = {
+        all: document.getElementById('tab-all'),
+        monster: document.getElementById('tab-monsters'),
+        god: document.getElementById('tab-gods')
+      };
+      Object.keys(tabs).forEach(key => {
+        if (key === currentCategory) {
+          tabs[key].className = "category-tab px-3 py-1 rounded-md text-xs font-bold border border-mayaAmber bg-mayaAmber text-parchment-900 shadow-sm";
+        } else {
+          tabs[key].className = "category-tab px-3 py-1 rounded-md text-xs font-bold border border-parchment-400 bg-parchment-100 text-parchment-800 hover:bg-parchment-300";
+        }
+      });
+    }
+
+    function renderRegionCards() {
+      if (!activeRegionId && !globalSearch.value.trim()) return;
+
+      cardsGrid.innerHTML = '';
+      const query = (drawerSearch.value || globalSearch.value).toLowerCase().trim();
+
+      let itemsToDisplay = [];
+
+      if (activeRegionId) {
+        const reg = MYTHOLOGY_DATA[activeRegionId];
+        
+        // Count totals
+        document.getElementById('count-monsters').innerText = reg.monsters.length;
+        document.getElementById('count-gods').innerText = reg.gods.length;
+        document.getElementById('count-all').innerText = reg.monsters.length + reg.gods.length;
+
+        if (currentCategory === 'all' || currentCategory === 'monster') {
+          reg.monsters.forEach(m => itemsToDisplay.push({ ...m, type: 'monster', regionName: reg.name }));
+        }
+        if (currentCategory === 'all' || currentCategory === 'god') {
+          reg.gods.forEach(g => itemsToDisplay.push({ ...g, type: 'god', regionName: reg.name }));
+        }
+      } else {
+        // Global search across ALL regions
+        Object.keys(MYTHOLOGY_DATA).forEach(key => {
+          const reg = MYTHOLOGY_DATA[key];
+          reg.monsters.forEach(m => itemsToDisplay.push({ ...m, type: 'monster', regionName: reg.name }));
+          reg.gods.forEach(g => itemsToDisplay.push({ ...g, type: 'god', regionName: reg.name }));
+        });
+      }
+
+      // Filter by text search
+      if (query) {
+        itemsToDisplay = itemsToDisplay.filter(item => 
+          item.name.toLowerCase().includes(query) || 
+          item.en.toLowerCase().includes(query) || 
+          item.content.toLowerCase().includes(query) ||
+          item.origin.toLowerCase().includes(query) ||
+          item.location.toLowerCase().includes(query)
+        );
+      }
+
+      if (itemsToDisplay.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      // Render Cards
+      itemsToDisplay.forEach(item => {
+        const isMonster = item.type === 'monster';
+        const card = document.createElement('div');
+        card.className = "parchment-card rounded-lg p-4 flex flex-col justify-between hover:shadow-lg transition border-l-4 " + 
+          (isMonster ? "border-l-mayaRed" : "border-l-mayaAmber");
+
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <span class="text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded ${isMonster ? 'bg-mayaRed/10 text-mayaRed' : 'bg-mayaAmber/20 text-parchment-800'}">
+                  ${isMonster ? '怪物・悪霊 (Monster)' : '神様 (God)'}
+                </span>
+                <h3 class="text-lg font-bold text-mayaDark font-serif mt-1">${item.name}</h3>
+                <p class="text-xs italic text-parchment-600 font-cinzel">${item.en}</p>
+              </div>
+              <span class="text-xs text-parchment-600 bg-parchment-200 px-2 py-1 rounded-full border border-parchment-300 font-sans shrink-0">
+                ${item.regionName}
+              </span>
+            </div>
+
+            <div class="text-xs text-parchment-800 space-y-2 mt-3">
+              <p class="bg-parchment-200/50 p-2 rounded border border-parchment-300/60">
+                <strong class="text-mayaDark block mb-0.5"><i class="fa-solid fa-map-pin text-mayaAmber mr-1"></i> 場所:</strong>
+                ${item.location}
+              </p>
+              <p class="leading-relaxed">
+                <strong class="text-mayaDark block mb-0.5"><i class="fa-solid fa-align-left text-mayaAmber mr-1"></i> 概要・内容:</strong>
+                ${item.content}
+              </p>
+              <p class="leading-relaxed">
+                <strong class="text-mayaDark block mb-0.5"><i class="fa-solid fa-seedling text-mayaAmber mr-1"></i> 誕生経緯:</strong>
+                ${item.origin}
+              </p>
+            </div>
+          </div>
+        `;
+        cardsGrid.appendChild(card);
+      });
+    }
+
+    // Search Input Event Listeners
+    drawerSearch.addEventListener('input', renderRegionCards);
+    globalSearch.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      if (val) {
+        document.getElementById('drawer-title').innerText = `全域検索結果: "${val}"`;
+        document.getElementById('drawer-region-badge').innerText = `SEARCH`;
+        drawer.classList.remove('translate-y-full');
+        renderRegionCards();
+      }
+    });
+
+    /* =========================================================================
+       REFERENCES MODAL HANDLER
+       ========================================================================= */
+    const refsModal = document.getElementById('references-modal');
+    document.getElementById('btn-references').addEventListener('click', () => {
+      refsModal.classList.remove('hidden');
+    });
+    document.getElementById('btn-close-refs').addEventListener('click', () => {
+      refsModal.classList.add('hidden');
+    });
+    refsModal.addEventListener('click', (e) => {
+      if (e.target === refsModal) refsModal.classList.add('hidden');
+    });
+
+    /* =========================================================================
+       INITIALIZATION ON PAGE LOAD
+       ========================================================================= */
+    window.onload = function() {
+      resizeCanvas();
+      resetView();
+      window.addEventListener('resize', resizeCanvas);
+    };
+  </script>
+</body>
+</html>
